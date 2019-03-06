@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "teamcity.fullname" . }}-agent
+  labels:
+    app.kubernetes.io/name: {{ include "teamcity.name" . }}-agent
+    helm.sh/chart: {{ include "teamcity.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.agentReplicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "teamcity.name" . }}-agent
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "teamcity.name" . }}-agent
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}-agent
+          image: "{{ .Values.agentImage.repository }}:{{ .Values.agentImage.tag }}"
+          imagePullPolicy: {{ .Values.agentImage.pullPolicy }}
+          env:
+            - name: SERVER_URL
+              value: http://{{ include "teamcity.fullname" . }}
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

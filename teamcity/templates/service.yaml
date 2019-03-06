@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "teamcity.fullname" . }}
+  # todo: make this a variable if type load balancer
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+  labels:
+    app.kubernetes.io/name: {{ include "teamcity.name" . }}
+    helm.sh/chart: {{ include "teamcity.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 8111
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: {{ include "teamcity.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
